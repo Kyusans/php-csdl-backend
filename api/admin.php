@@ -6,9 +6,9 @@
             // {"username":"admin","password":"admin"}
             include "connection.php";
             $json = json_decode($json, true);
-            $sql = "SELECT * FROM tblusers WHERE adm_employee_id = :username AND adm_password = :password";
+            $sql = "SELECT * FROM tbl_admin WHERE adm_employee_id = :userId AND BINARY adm_password = :password";
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam(":username", $json["username"]);
+            $stmt->bindParam(":userId", $json["userId"]);
             $stmt->bindParam(":password", $json["password"]);
             $returnValue = 0;
             $stmt->execute();
