@@ -54,6 +54,20 @@ class Admin
 
         return $returnValue;
     }
+    function getScholarshipType()
+    {
+        include "connection.php";
+        $sql = "SELECT * FROM tbl_scholarship_type ORDER BY type_name";
+        $stmt = $conn->prepare($sql);
+        $returnValue = 0;
+        $stmt->execute();
+        if ($stmt->rowCount() > 0) {
+            $rs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $returnValue = json_encode($rs);
+        }
+
+        return $returnValue;
+    }
 } //admin 
 
 $json = isset($_POST["json"]) ? $_POST["json"] : "0";
@@ -70,5 +84,8 @@ switch ($operation) {
         break;
     case "getCourse":
         echo $admin->getCourse();
+        break;
+    case "getScholarshipType":
+        echo $admin->getScholarshipType();
         break;
 }
