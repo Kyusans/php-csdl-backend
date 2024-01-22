@@ -26,8 +26,9 @@ class Admin
     {
         include "connection.php";
         $json = json_decode($json, true);
-        $sql = "INSERT INTO tbl_scholars(stud_school_Id, stud_last_name, stud_first_name, stud_course_id, stud_year_level, stud_scholarship_type_id, stud_password) 
-            VALUES(:schoolId, :lastName, :firstName, :courseId, :yearLevel, :scholarShipId, :password)";
+        $password = $json["lastName"] . "123";
+        $sql = "INSERT INTO tbl_scholars(stud_school_Id, stud_last_name, stud_first_name, stud_course_id, stud_year_level, stud_scholarship_type_id, stud_password, stud_contact_number) 
+            VALUES(:schoolId, :lastName, :firstName, :courseId, :yearLevel, :scholarShipId, :password, :contact)";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":schoolId", $json["schoolId"]);
         $stmt->bindParam(":lastName", $json["lastName"]);
@@ -35,7 +36,8 @@ class Admin
         $stmt->bindParam(":courseId", $json["courseId"]);
         $stmt->bindParam(":yearLevel", $json["yearLevel"]);
         $stmt->bindParam(":scholarShipId", $json["scholarShipId"]);
-        $stmt->bindValue(":password", $json["lastName"] . $json["schoolId"]);
+        $stmt->bindValue(":password", $password);
+        $stmt->bindParam(":contact", $json["contact"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
@@ -68,6 +70,8 @@ class Admin
 
         return $returnValue;
     }
+    
+    
 } //admin 
 
 $json = isset($_POST["json"]) ? $_POST["json"] : "0";
