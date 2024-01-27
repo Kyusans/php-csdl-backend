@@ -26,8 +26,9 @@ class Admin
     {
         include "connection.php";
         $json = json_decode($json, true);
-        $sql = "INSERT INTO tbl_scholars(stud_school_Id, stud_last_name, stud_first_name, stud_course_id, stud_year_level, stud_scholarship_type_id, stud_password) 
-            VALUES(:schoolId, :lastName, :firstName, :courseId, :yearLevel, :scholarShipId, :password)";
+        $password = $json["lastName"] . "123";
+        $sql = "INSERT INTO tbl_scholars(stud_school_Id, stud_last_name, stud_first_name, stud_course_id, stud_year_level, stud_scholarship_type_id, stud_password, stud_contact_number) 
+            VALUES(:schoolId, :lastName, :firstName, :courseId, :yearLevel, :scholarShipId, :password, :contact)";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":schoolId", $json["schoolId"]);
         $stmt->bindParam(":lastName", $json["lastName"]);
@@ -35,7 +36,8 @@ class Admin
         $stmt->bindParam(":courseId", $json["courseId"]);
         $stmt->bindParam(":yearLevel", $json["yearLevel"]);
         $stmt->bindParam(":scholarShipId", $json["scholarShipId"]);
-        $stmt->bindValue(":password", $json["lastName"] . $json["schoolId"]);
+        $stmt->bindValue(":password", $password);
+        $stmt->bindParam(":contact", $json["contact"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
@@ -68,7 +70,72 @@ class Admin
 
         return $returnValue;
     }
+
+    function addAdmin($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        $image = "emptyImage.jpg";
+        $fullName = $json["firstName"] . " " . $json["lastName"];
+        $userId = $json["userId"];
+
+        if (userExists($userId, $conn)) {
+            return -1; 
+        }
+
+        $sql = "INSERT INTO tbl_admin(adm_name, adm_employee_id, adm_password, adm_email, adm_image, adm_user_level) 
+                VALUES(:fullName, :userId, :password, :email, :image, 100)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":fullName", $fullName);
+        $stmt->bindParam(":password", $json["password"]);
+        $stmt->bindParam(":email", $json["email"]);
+        $stmt->bindParam(":image", $image);
+        $stmt->bindParam(":userId", $userId);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    // function updateAdmin($json){
+    //     include "connection.php";
+    //     $json = json_decode($json, true);
+    //     $sql = "UPDATE tbl_admin SET adm_password = :password, adm_employee_id = :userId WHERE adm_id = :userId";
+    //     $stmt = $conn->prepare($sql);
+    //     $stmt->bindParam(":password", $json["password"]);
+    //     $stmt->bindParam(":userId", $json["userId"]);
+    //     $stmt->execute();
+    //     return $stmt->rowCount() > 0 ? 1 : 0;
+    // }
+
+    // function getAdminInfo($json){
+    //     // {"userId": 1}
+    //     include "connection.php";
+    //     $json = json_decode($json, true);
+    //     $sql = "SELECT * FROM tbl_admin WHERE adm_id  = :userId";
+    //     $stmt = $conn->prepare($sql);
+    //     $stmt->bindParam(":userId", $json["userId"]);
+    //     $returnValue = 0;
+    //     $stmt->execute();
+    //     if ($stmt->rowCount() > 0) {
+    //         $rs = $stmt->fetch(PDO::FETCH_ASSOC);
+    //         $returnValue = json_encode($rs);
+    //     }
+    //     return $returnValue;
+    // }
+
+
 } //admin 
+
+function userExists($userId, $conn)
+{
+    $sql = "SELECT COUNT(*) FROM tbl_admin WHERE adm_employee_id = :userId";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(":userId", $userId);
+    $stmt->execute();
+    $count = $stmt->fetchColumn();
+
+    return $count > 0;
+}
 
 $json = isset($_POST["json"]) ? $_POST["json"] : "0";
 $operation = isset($_POST["operation"]) ? $_POST["operation"] : "0";
@@ -88,4 +155,10 @@ switch ($operation) {
     case "getScholarshipType":
         echo $admin->getScholarshipType();
         break;
+    case "addAdmin":
+        echo $admin->addAdmin($json);
+        break;
+        // case "getAdminInfo":
+        //     echo $admin->getAdminInfo($json);
+        //     break;
 }
