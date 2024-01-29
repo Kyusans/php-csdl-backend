@@ -79,8 +79,8 @@ class Admin
         $fullName = $json["firstName"] . " " . $json["lastName"];
         $userId = $json["userId"];
 
-        if (userExists($userId, $conn)) {
-            return -1; 
+        if (recordExists($userId, "tbl_admin", "adm_employee_id") ) {
+            return -1;
         }
 
         $sql = "INSERT INTO tbl_admin(adm_name, adm_employee_id, adm_password, adm_email, adm_image, adm_user_level) 
@@ -93,6 +93,34 @@ class Admin
         $stmt->bindParam(":userId", $userId);
         $stmt->execute();
 
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addDepartment($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["department"], "tbl_departments", "dept_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_departments(dept_name) VALUES(:name)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":name", $json["department"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addSchoolYear($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["schoolYear"], "tbl_sy", "sy_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_sy(sy_name) VALUES(:schoolYear)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":schoolYear", $json["schoolYear"]);
+        $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
@@ -126,14 +154,14 @@ class Admin
 
 } //admin 
 
-function userExists($userId, $conn)
+function recordExists($value, $table, $column)
 {
-    $sql = "SELECT COUNT(*) FROM tbl_admin WHERE adm_employee_id = :userId";
+    include "connection.php";
+    $sql = "SELECT COUNT(*) FROM $table WHERE $column = :value";
     $stmt = $conn->prepare($sql);
-    $stmt->bindParam(":userId", $userId);
+    $stmt->bindParam(":value", $value);
     $stmt->execute();
     $count = $stmt->fetchColumn();
-
     return $count > 0;
 }
 
@@ -158,7 +186,10 @@ switch ($operation) {
     case "addAdmin":
         echo $admin->addAdmin($json);
         break;
-        // case "getAdminInfo":
-        //     echo $admin->getAdminInfo($json);
-        //     break;
+    case "addDepartment":
+        echo $admin->addDepartment($json);
+        break;
+    case "addSchoolYear":
+        echo $admin->addSchoolYear($json);
+        break;
 }
