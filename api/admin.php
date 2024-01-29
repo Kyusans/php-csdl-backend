@@ -79,7 +79,7 @@ class Admin
         $fullName = $json["firstName"] . " " . $json["lastName"];
         $userId = $json["userId"];
 
-        if (userExists($userId, $conn)) {
+        if (recordExists($userId, "tbl_admin", "adm_employee_id") ) {
             return -1;
         }
 
@@ -100,12 +100,26 @@ class Admin
     {
         include "connection.php";
         $json = json_decode($json, true);
-        if(departmentExists($json["department"], $conn)){
+        if (recordExists($json["department"], "tbl_departments", "dept_name")) {
             return -1;
         }
         $sql = "INSERT INTO tbl_departments(dept_name) VALUES(:name)";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":name", $json["department"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addSchoolYear($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["schoolYear"], "tbl_sy", "sy_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_sy(sy_name) VALUES(:schoolYear)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":schoolYear", $json["schoolYear"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
@@ -140,24 +154,14 @@ class Admin
 
 } //admin 
 
-function departmentExists($department, $conn)
+function recordExists($value, $table, $column)
 {
-    $sql = "SELECT COUNT(*) FROM tbl_departments WHERE dept_name = :department";
+    include "connection.php";
+    $sql = "SELECT COUNT(*) FROM $table WHERE $column = :value";
     $stmt = $conn->prepare($sql);
-    $stmt->bindParam(":department", $department);
+    $stmt->bindParam(":value", $value);
     $stmt->execute();
     $count = $stmt->fetchColumn();
-    return $count > 0;
-}
-
-function userExists($userId, $conn)
-{
-    $sql = "SELECT COUNT(*) FROM tbl_admin WHERE adm_employee_id = :userId";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(":userId", $userId);
-    $stmt->execute();
-    $count = $stmt->fetchColumn();
-
     return $count > 0;
 }
 
@@ -184,5 +188,8 @@ switch ($operation) {
         break;
     case "addDepartment":
         echo $admin->addDepartment($json);
+        break;
+    case "addSchoolYear":
+        echo $admin->addSchoolYear($json);
         break;
 }
