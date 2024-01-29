@@ -80,7 +80,7 @@ class Admin
         $userId = $json["userId"];
 
         if (userExists($userId, $conn)) {
-            return -1; 
+            return -1;
         }
 
         $sql = "INSERT INTO tbl_admin(adm_name, adm_employee_id, adm_password, adm_email, adm_image, adm_user_level) 
@@ -93,6 +93,20 @@ class Admin
         $stmt->bindParam(":userId", $userId);
         $stmt->execute();
 
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addDepartment($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        if(departmentExists($json["department"], $conn)){
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_departments(dept_name) VALUES(:name)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":name", $json["department"]);
+        $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
@@ -126,6 +140,16 @@ class Admin
 
 } //admin 
 
+function departmentExists($department, $conn)
+{
+    $sql = "SELECT COUNT(*) FROM tbl_departments WHERE dept_name = :department";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(":department", $department);
+    $stmt->execute();
+    $count = $stmt->fetchColumn();
+    return $count > 0;
+}
+
 function userExists($userId, $conn)
 {
     $sql = "SELECT COUNT(*) FROM tbl_admin WHERE adm_employee_id = :userId";
@@ -158,7 +182,7 @@ switch ($operation) {
     case "addAdmin":
         echo $admin->addAdmin($json);
         break;
-        // case "getAdminInfo":
-        //     echo $admin->getAdminInfo($json);
-        //     break;
+    case "addDepartment":
+        echo $admin->addDepartment($json);
+        break;
 }
