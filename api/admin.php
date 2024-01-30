@@ -124,6 +124,19 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
+    function getDepartment(){
+        include "connection.php";
+        $sql = "SELECT * FROM tbl_departments ORDER BY dept_name";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $returnValue = 0;
+        if($stmt->rowCount() > 0){
+            $rs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $returnValue = json_encode($rs);
+        }
+        return $returnValue;
+    }
+
     // function updateAdmin($json){
     //     include "connection.php";
     //     $json = json_decode($json, true);
@@ -191,5 +204,8 @@ switch ($operation) {
         break;
     case "addSchoolYear":
         echo $admin->addSchoolYear($json);
+        break;
+    case "getDepartment":
+        echo $admin->getDepartment();
         break;
 }
