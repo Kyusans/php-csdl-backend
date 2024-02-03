@@ -127,18 +127,35 @@ class Admin
     function addSupervisor($json){
         include "connection.php";
         $json = json_decode($json, true);
-        if (recordExists($json["userId"], "tbl_supervisors_master", "supM_employee_id")) {
-            
+        $fullName = $json["firstName"] . " " . $json["lastName"];
+        if (recordExists($json["employeeId"], "tbl_supervisors_master", "supM_employee_id")) {
+            return -1;
         }
-        $sql = "INSERT INTO tbl_supervisors_master(supM_employee_id, supM_password, supM_name, supM_department_id) 
-                VALUES(:userId, :password, :name, :department)";
+        $sql = "INSERT INTO tbl_supervisors_master(supM_employee_id, supM_password, supM_name, supM_department_id, supM_email, supM_status) 
+                VALUES(:employeeId, :password, :name, :department, :email, 1)";
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam(":userId", $json["userId"]);
+        $stmt->bindParam(":employeeId", $json["employeeId"]);
         $stmt->bindParam(":password", $json["password"]);
-        $stmt->bindParam(":name", $json["name"]);
+        $stmt->bindParam(":name", $fullName);
+        $stmt->bindParam(":email", $json["email"]);
         $stmt->bindParam(":department", $json["department"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addCourse($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["course"], "tbl_course", "crs_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_course(crs_name, crs_dept_id) VALUES(:course, :department)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":course", $json["course"]);
+        $stmt->bindParam(":department", $json["department"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+        
     }
 
     function getDepartment(){
@@ -153,6 +170,7 @@ class Admin
         }
         return $returnValue;
     }
+    
 
     // function updateAdmin($json){
     //     include "connection.php";
@@ -227,5 +245,8 @@ switch ($operation) {
         break;
     case "addSupervisor":
         echo $admin->addSupervisor($json);
+        break;
+    case "addCourse";
+        echo $admin->addCourse($json);
         break;
 }
