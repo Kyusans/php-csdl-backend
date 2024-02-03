@@ -158,6 +158,19 @@ class Admin
         
     }
 
+    function addScholarShipType($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["scholarshipType"], "tbl_scholarship_type", "type_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_scholarship_type(type_name) VALUES(:scholarshipType)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":scholarshipType", $json["scholarshipType"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
     function getDepartment(){
         include "connection.php";
         $sql = "SELECT * FROM tbl_departments ORDER BY dept_name";
@@ -246,7 +259,10 @@ switch ($operation) {
     case "addSupervisor":
         echo $admin->addSupervisor($json);
         break;
-    case "addCourse";
+    case "addCourse":
         echo $admin->addCourse($json);
+        break;
+    case "addScholarShipType":
+        echo $admin->addScholarShipType($json);
         break;
 }
