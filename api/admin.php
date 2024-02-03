@@ -124,6 +124,23 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
+    function addSupervisor($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["userId"], "tbl_supervisors_master", "supM_employee_id")) {
+            
+        }
+        $sql = "INSERT INTO tbl_supervisors_master(supM_employee_id, supM_password, supM_name, supM_department_id) 
+                VALUES(:userId, :password, :name, :department)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":userId", $json["userId"]);
+        $stmt->bindParam(":password", $json["password"]);
+        $stmt->bindParam(":name", $json["name"]);
+        $stmt->bindParam(":department", $json["department"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
     function getDepartment(){
         include "connection.php";
         $sql = "SELECT * FROM tbl_departments ORDER BY dept_name";
@@ -207,5 +224,8 @@ switch ($operation) {
         break;
     case "getDepartment":
         echo $admin->getDepartment();
+        break;
+    case "addSupervisor":
+        echo $admin->addSupervisor($json);
         break;
 }
