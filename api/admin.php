@@ -171,6 +171,19 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
+    function addOffice($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["officeName"], "tbl_office_master", "off_name")) {
+            return -1;
+        }
+        $sql = "INSERT INTO tbl_office_master(off_name) VALUES(:officeName)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":officeName", $json["officeName"]);
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
     function getDepartment(){
         include "connection.php";
         $sql = "SELECT * FROM tbl_departments ORDER BY dept_name";
@@ -264,5 +277,8 @@ switch ($operation) {
         break;
     case "addScholarShipType":
         echo $admin->addScholarShipType($json);
+        break;
+    case "addOffice":
+        echo $admin->addOffice($json);
         break;
 }
