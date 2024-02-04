@@ -205,7 +205,32 @@ class Admin
         $stmt->bindParam(":room", $json["room"]);
 
         $stmt->execute();
-        return $stmt->rowCount() > 0 ? 1 : 0;}
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+
+    function addScholarSubType($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+    
+        if (!is_array($json)) {
+            return -1; // Return an error code if $json is not an array
+        }
+    
+        if(recordExists($json["typeName"], "tbl_scholarship_sub_type", "stype_name")){
+            return -1;
+        }
+    
+        $sql = "INSERT INTO tbl_scholarship_sub_type(stype_type_id, stype_name, stype_max_hours) 
+        VALUES(:scholarshipType, :typeName, :maxHours)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":scholarshipType", $json["scholarshipType"]);
+        $stmt->bindParam(":typeName", $json["typeName"]);
+        $stmt->bindParam(":maxHours", $json["maxHours"]);
+    
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;
+    }
+    
 
     function getDepartment()
     {
@@ -307,5 +332,8 @@ switch ($operation) {
         break;
     case "addClass":
         echo $admin->addClass($json);
+        break;
+    case "addScholarSubType":
+        echo $admin->addScholarSubType($json);
         break;
 }
