@@ -79,7 +79,7 @@ class Admin
         $fullName = $json["firstName"] . " " . $json["lastName"];
         $userId = $json["userId"];
 
-        if (recordExists($userId, "tbl_admin", "adm_employee_id") ) {
+        if (recordExists($userId, "tbl_admin", "adm_employee_id")) {
             return -1;
         }
 
@@ -124,7 +124,8 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function addSupervisor($json){
+    function addSupervisor($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
         $fullName = $json["firstName"] . " " . $json["lastName"];
@@ -143,7 +144,8 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function addCourse($json){
+    function addCourse($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
         if (recordExists($json["course"], "tbl_course", "crs_name")) {
@@ -155,10 +157,10 @@ class Admin
         $stmt->bindParam(":department", $json["department"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
-        
     }
 
-    function addScholarShipType($json){
+    function addScholarShipType($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
         if (recordExists($json["scholarshipType"], "tbl_scholarship_type", "type_name")) {
@@ -171,32 +173,54 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function addOffice($json){
+    function addOffice($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
         if (recordExists($json["officeName"], "tbl_office_master", "off_name")) {
             return -1;
         }
-        $sql = "INSERT INTO tbl_office_master(off_name) VALUES(:officeName)";
+        $sql = "INSERT INTO tbl_office_master(off_name, off_type_id) VALUES(:officeName, 1)";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":officeName", $json["officeName"]);
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function getDepartment(){
+    function addClass($json)
+    {
+        include "connection.php";
+        $json = json_decode($json, true);
+        if (recordExists($json["className"], "tbl_office_master", "off_name")) {
+            return -1;
+        }
+
+        $sql = "INSERT INTO tbl_office_master(off_name, off_descriptive_title, off_subject_code, off_section, off_room, off_type_id) 
+                VALUES(:className, :description, :subjectCode, :section, :room, 2)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":className", $json["className"]);
+        $stmt->bindParam(":description", $json["description"]);
+        $stmt->bindParam(":subjectCode", $json["subjectCode"]);
+        $stmt->bindParam(":section", $json["section"]);
+        $stmt->bindParam(":room", $json["room"]);
+
+        $stmt->execute();
+        return $stmt->rowCount() > 0 ? 1 : 0;}
+
+    function getDepartment()
+    {
         include "connection.php";
         $sql = "SELECT * FROM tbl_departments ORDER BY dept_name";
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $returnValue = 0;
-        if($stmt->rowCount() > 0){
+        if ($stmt->rowCount() > 0) {
             $rs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $returnValue = json_encode($rs);
         }
         return $returnValue;
     }
-    
+
 
     // function updateAdmin($json){
     //     include "connection.php";
@@ -280,5 +304,8 @@ switch ($operation) {
         break;
     case "addOffice":
         echo $admin->addOffice($json);
+        break;
+    case "addClass":
+        echo $admin->addClass($json);
         break;
 }
