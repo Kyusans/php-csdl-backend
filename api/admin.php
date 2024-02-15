@@ -42,6 +42,22 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
+    function getList($json){
+        include "connection.php";
+        $json = json_decode($json, true);
+        $tableName = $json["tableName"];
+        $orderBy = $json["orderBy"];
+        $sql = "SELECT * FROM $tableName ORDER BY $orderBy";
+        $stmt = $conn->prepare($sql);
+        $returnValue = 0;
+        $stmt->execute();
+        if ($stmt->rowCount() > 0) {
+            $rs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $returnValue = json_encode($rs);
+        }
+        return $returnValue;
+    }
+
     function getCourse()
     {
         include "connection.php";
@@ -211,11 +227,7 @@ class Admin
     function addScholarSubType($json){
         include "connection.php";
         $json = json_decode($json, true);
-    
-        if (!is_array($json)) {
-            return -1; // Return an error code if $json is not an array
-        }
-    
+
         if(recordExists($json["typeName"], "tbl_scholarship_sub_type", "stype_name")){
             return -1;
         }
@@ -245,36 +257,6 @@ class Admin
         }
         return $returnValue;
     }
-
-
-    // function updateAdmin($json){
-    //     include "connection.php";
-    //     $json = json_decode($json, true);
-    //     $sql = "UPDATE tbl_admin SET adm_password = :password, adm_employee_id = :userId WHERE adm_id = :userId";
-    //     $stmt = $conn->prepare($sql);
-    //     $stmt->bindParam(":password", $json["password"]);
-    //     $stmt->bindParam(":userId", $json["userId"]);
-    //     $stmt->execute();
-    //     return $stmt->rowCount() > 0 ? 1 : 0;
-    // }
-
-    // function getAdminInfo($json){
-    //     // {"userId": 1}
-    //     include "connection.php";
-    //     $json = json_decode($json, true);
-    //     $sql = "SELECT * FROM tbl_admin WHERE adm_id  = :userId";
-    //     $stmt = $conn->prepare($sql);
-    //     $stmt->bindParam(":userId", $json["userId"]);
-    //     $returnValue = 0;
-    //     $stmt->execute();
-    //     if ($stmt->rowCount() > 0) {
-    //         $rs = $stmt->fetch(PDO::FETCH_ASSOC);
-    //         $returnValue = json_encode($rs);
-    //     }
-    //     return $returnValue;
-    // }
-
-
 } //admin 
 
 function recordExists($value, $table, $column)
@@ -335,5 +317,8 @@ switch ($operation) {
         break;
     case "addScholarSubType":
         echo $admin->addScholarSubType($json);
+        break;
+    case "getList":
+        echo $admin->getList($json);
         break;
 }
