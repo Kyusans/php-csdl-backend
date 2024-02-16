@@ -42,7 +42,8 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function getList($json){
+    function getList($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
         $tableName = $json["tableName"];
@@ -224,25 +225,26 @@ class Admin
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
 
-    function addScholarSubType($json){
+    function addScholarSubType($json)
+    {
         include "connection.php";
         $json = json_decode($json, true);
 
-        if(recordExists($json["typeName"], "tbl_scholarship_sub_type", "stype_name")){
+        if (recordExists($json["typeName"], "tbl_scholarship_sub_type", "stype_name")) {
             return -1;
         }
-    
+
         $sql = "INSERT INTO tbl_scholarship_sub_type(stype_type_id, stype_name, stype_max_hours) 
         VALUES(:scholarshipType, :typeName, :maxHours)";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":scholarshipType", $json["scholarshipType"]);
         $stmt->bindParam(":typeName", $json["typeName"]);
         $stmt->bindParam(":maxHours", $json["maxHours"]);
-    
+
         $stmt->execute();
         return $stmt->rowCount() > 0 ? 1 : 0;
     }
-    
+
 
     function getDepartment()
     {
@@ -256,6 +258,54 @@ class Admin
             $returnValue = json_encode($rs);
         }
         return $returnValue;
+    }
+
+    function addClasses($json)
+    {
+        // {"subjectCode":"PHYS102","description":"Physics for Engineers","section":"C","room":"SHS-104 (B)","officeType":2,"dayf2f":"THU", "dayrc":"SAT","startTimef2f":"02:00PM","endTimef2f":"04:00PM","startTimerc":"04:30PM","endTimerc":"06:30PM"}
+
+        include "connection.php";
+        $json = json_decode($json, true);
+        try {
+            $conn->beginTransaction();
+            $officeName = $json["subjectCode"] . "-" . $json["section"];
+
+            $sql = "INSERT INTO tbl_office_master(off_name, off_subject_code, off_descriptive_title, off_section, off_room, off_type_id) 
+            VALUES(:className, :subjectCode, :description, :section, :room, :officeType)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":className", $officeName);
+            $stmt->bindParam(":subjectCode", $json["subjectCode"]);
+            $stmt->bindParam(":description", $json["description"]);
+            $stmt->bindParam(":section", $json["section"]);
+            $stmt->bindParam(":room", $json["room"]);
+            $stmt->bindParam(":officeType", $json["officeType"]);
+            $stmt->execute();
+
+            $officeId = $conn->lastInsertId();
+            $sql2 = "INSERT INTO tbl_office_schedule(offSched_office_id, offSched_day, offSched_start_time, offSched_end_time, offSched_f2f) 
+            VALUES(:officeId, :dayf2f, :startTimef2f, :endTimef2f, 1)";
+            $stmt2 = $conn->prepare($sql2);
+            $stmt2->bindParam(":officeId", $officeId);
+            $stmt2->bindParam(":dayf2f", $json["dayf2f"]);
+            $stmt2->bindParam(":startTimef2f", $json["startTimef2f"]);
+            $stmt2->bindParam(":endTimef2f", $json["endTimef2f"]);
+            $stmt2->execute();
+
+            $sql3 = "INSERT INTO tbl_office_schedule(offSched_office_id, offSched_day, offSched_start_time, offSched_end_time, offSched_f2f) 
+            VALUES(:officeId, :dayrc, :startTimerc, :endTimerc, 0)";
+            $stmt3 = $conn->prepare($sql3);
+            $stmt3->bindParam(":officeId", $officeId);
+            $stmt3->bindParam(":dayrc", $json["dayrc"]);
+            $stmt3->bindParam(":startTimerc", $json["startTimerc"]);
+            $stmt3->bindParam(":endTimerc", $json["endTimerc"]);
+            $stmt3->execute();
+
+            $conn->commit();
+            return 1;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            return $e;
+        }
     }
 } //admin 
 
@@ -320,5 +370,8 @@ switch ($operation) {
         break;
     case "getList":
         echo $admin->getList($json);
+        break;
+    case "addClasses":
+        echo $admin->addClasses($json);
         break;
 }
