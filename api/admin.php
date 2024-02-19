@@ -307,6 +307,29 @@ class Admin
             return $e;
         }
     }
+
+    function setSYActive($json)
+	{
+		include "connection.php";
+		try {
+			$conn->beginTransaction();
+			$json = json_decode($json, true);
+			$sql = "UPDATE tbl_sy SET sy_status = 0";
+			$stmt = $conn->prepare($sql);
+			$stmt->execute();
+			if ($stmt->rowCount() > 0) {
+				$sql2 = "UPDATE tbl_sy SET sy_status = 1 WHERE sy_id = :schoolYear";
+				$stmt2 = $conn->prepare($sql2);
+				$stmt2->bindParam(":schoolYear", $json["schoolYearId"]);
+				$stmt2->execute();
+				$conn->commit();
+			}
+			return $stmt2->rowCount() > 0 ? 1 : 0;
+		} catch (Exception $e) {
+			$conn->rollBack();
+			return $e;
+		}
+	}
 } //admin 
 
 function recordExists($value, $table, $column)
@@ -373,5 +396,8 @@ switch ($operation) {
         break;
     case "addClasses":
         echo $admin->addClasses($json);
+        break;
+    case "setSYActive":
+        echo $admin->setSYActive($json);
         break;
 }
